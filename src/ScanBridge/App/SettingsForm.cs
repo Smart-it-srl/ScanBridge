@@ -23,8 +23,8 @@ public sealed class SettingsForm : Form
     private static readonly string[] SourceValues = ["flatbed", "feeder", "duplex"];
     private static readonly string[] ColorLabels = ["Colore", "Scala di grigi", "Bianco e nero"];
     private static readonly string[] ColorValues = ["color", "grayscale", "blackAndWhite"];
-    private static readonly string[] PageSizeLabels = ["Letter", "Legal", "A4"];
-    private static readonly string[] PageSizeValues = ["letter", "legal", "a4"];
+    private static readonly string[] PageSizeLabels = ["A4", "Letter", "Legal"];
+    private static readonly string[] PageSizeValues = ["a4", "letter", "legal"];
     private static readonly string[] FormatLabels = ["PDF (tutte le pagine)", "JPG (solo la prima immagine)"];
     private static readonly string[] FormatValues = ["pdf", "jpg"];
     private static readonly int[] DpiChoices = [100, 150, 200, 300, 400, 600];
@@ -64,8 +64,7 @@ public sealed class SettingsForm : Form
         _webHostRunner = webHostRunner;
         _syncContext = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
 
-        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
-        Text = $"ScanBridge v{version} - Impostazioni";
+        Text = $"ScanBridge v{AppInfo.Version} - Impostazioni";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -176,6 +175,9 @@ public sealed class SettingsForm : Form
         var openLogsButton = new Button { Text = "Apri cartella dei log", AutoSize = true };
         openLogsButton.Click += (_, _) => LogFolder.Open();
         startupPanel.Controls.Add(openLogsButton);
+        var copyDiagnosticsButton = new Button { Text = "Copia diagnostica", AutoSize = true };
+        copyDiagnosticsButton.Click += (_, _) => CopyDiagnostics();
+        startupPanel.Controls.Add(copyDiagnosticsButton);
 
         var saveButton = new Button { Text = "Salva", AutoSize = true, DialogResult = DialogResult.OK };
         var cancelButton = new Button { Text = "Annulla", AutoSize = true, DialogResult = DialogResult.Cancel };
@@ -326,6 +328,35 @@ public sealed class SettingsForm : Form
 
         _settingsStore.Save(settings);
         Close();
+    }
+
+    /// <summary>Copies a short, non-sensitive summary of the setup to the clipboard for support.</summary>
+    private void CopyDiagnostics()
+    {
+        var settings = _settingsStore.Current;
+        var text = string.Join(Environment.NewLine,
+            $"ScanBridge v{AppInfo.Version}",
+            $"Windows: {Environment.OSVersion.VersionString}",
+            $".NET: {Environment.Version}",
+            $"Server: {(_webHostRunner.IsRunning ? "in ascolto" : "non in ascolto")} sulla porta {settings.Port}",
+            $"Ultimo errore: {_webHostRunner.LastError ?? "nessuno"}",
+            $"Driver: {settings.ScannerDriver ?? "wia"}",
+            $"Scanner: {settings.ScannerDeviceName ?? "non configurato"} ({settings.ScannerDeviceId ?? "-"})",
+            $"Formato: {settings.Defaults.Format}, qualità JPG {settings.Defaults.JpegQuality}, {settings.Defaults.Dpi} dpi, {settings.Defaults.PageSize}",
+            $"Siti autorizzati: {(settings.AllowedOrigins.Count == 0 ? "nessuno" : string.Join(", ", settings.AllowedOrigins))}",
+            $"Cartella dei log: {LogFolder.Path}");
+
+        try
+        {
+            Clipboard.SetText(text);
+            MessageBox.Show(this, "Diagnostica copiata negli appunti.", "ScanBridge",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            MessageBox.Show(this, "Impossibile accedere agli appunti. Riprova.", "ScanBridge",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private void OnListenerStatusChanged()

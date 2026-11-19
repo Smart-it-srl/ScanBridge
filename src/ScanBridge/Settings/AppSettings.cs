@@ -88,7 +88,7 @@ public sealed class ScanDefaults
     public string ColorMode { get; set; } = "color";
 
     /// <summary>"letter", "legal" or "a4".</summary>
-    public string PageSize { get; set; } = "letter";
+    public string PageSize { get; set; } = "a4";
 
     /// <summary>Drop pages the scanner returns that are (nearly) blank — useful for duplex.</summary>
     public bool ExcludeBlankPages { get; set; }

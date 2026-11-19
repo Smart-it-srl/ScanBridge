@@ -68,7 +68,7 @@ Starts a scan job. Body is optional; every field falls back to the configured de
   "duplex": false,               // shorthand for paperSource: "duplex"
   "dpi": 300,
   "colorMode": "color",         // "color" | "grayscale" | "blackAndWhite"
-  "pageSize": "letter",         // "letter" | "legal" | "a4"
+  "pageSize": "a4",             // "a4" (default) | "letter" | "legal"
   "excludeBlankPages": false,
   "autoDeskew": false,
   "format": "pdf",               // "pdf" (default) | "jpg"

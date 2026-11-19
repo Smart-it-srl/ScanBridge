@@ -26,6 +26,9 @@ public sealed class ScanJobManager : IDisposable
         _pruneTimer = new System.Threading.Timer(_ => Prune(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
     }
 
+    /// <summary>Raised when a job has been accepted and starts running.</summary>
+    public event Action<ScanJob>? JobStarted;
+
     /// <summary>Raised when a job reaches a terminal state (completed, failed or canceled).</summary>
     public event Action<ScanJob>? JobFinished;
 
@@ -49,6 +52,7 @@ public sealed class ScanJobManager : IDisposable
         }
 
         errorCode = null;
+        JobStarted?.Invoke(job);
         _ = RunAsync(job, request);
         return job;
     }

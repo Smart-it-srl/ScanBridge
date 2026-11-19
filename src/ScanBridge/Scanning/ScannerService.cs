@@ -166,7 +166,7 @@ public sealed class ScannerService : IDisposable
     {
         "legal" => PageSize.Legal,
         "a4" => PageSize.A4,
-        _ => PageSize.Letter,
+        _ => PageSize.A4,
     };
 
     public void Dispose()

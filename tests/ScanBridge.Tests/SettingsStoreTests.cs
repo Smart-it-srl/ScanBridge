@@ -8,6 +8,15 @@ public class SettingsStoreTests : IDisposable
     private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "ScanBridgeTests-" + Guid.NewGuid().ToString("N"));
 
     [Fact]
+    public void DefaultPageSizeIsA4AndDefaultFormatIsPdf()
+    {
+        var defaults = new AppSettings().Defaults;
+
+        Assert.Equal("a4", defaults.PageSize);
+        Assert.Equal("pdf", defaults.Format);
+    }
+
+    [Fact]
     public void LoadWithoutFileReturnsDefaultsAndFlagsFirstRun()
     {
         var store = new SettingsStore(_tempDir);

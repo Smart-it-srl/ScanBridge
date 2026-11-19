@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using ScanBridge.Scanning;
@@ -14,7 +13,7 @@ public static class ApiEndpoints
 {
     public static void Map(WebApplication app, SettingsStore settingsStore, ScannerService scannerService, ScanJobManager jobManager)
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+        var version = AppInfo.Version;
         var api = app.MapGroup("/api/v1");
 
         api.MapGet("/status", () =>
