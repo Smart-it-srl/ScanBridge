@@ -8,7 +8,7 @@ namespace ScanBridge.Api;
 
 /// <summary>
 /// Maps the localhost HTTP surface. All responses are camelCase JSON except the
-/// finished document, which is served as application/pdf.
+/// finished document, which is served as application/pdf or image/jpeg.
 /// </summary>
 public static class ApiEndpoints
 {
@@ -41,6 +41,12 @@ public static class ApiEndpoints
             body ??= new StartScanRequest();
             var settings = settingsStore.Current;
 
+            if (!ScanFormats.TryNormalize(body.Format, out var format))
+            {
+                return Error(StatusCodes.Status400BadRequest, "invalidFormat",
+                    "format must be \"pdf\" or \"jpg\".");
+            }
+
             var deviceId = body.ScannerId ?? settings.ScannerDeviceId;
             if (string.IsNullOrEmpty(deviceId))
             {
@@ -62,7 +68,8 @@ public static class ApiEndpoints
                 ColorMode: body.ColorMode ?? defaults.ColorMode,
                 PageSize: body.PageSize ?? defaults.PageSize,
                 ExcludeBlankPages: body.ExcludeBlankPages ?? defaults.ExcludeBlankPages,
-                AutoDeskew: body.AutoDeskew ?? defaults.AutoDeskew);
+                AutoDeskew: body.AutoDeskew ?? defaults.AutoDeskew,
+                Format: format);
 
             var job = jobManager.TryStart(request, out var errorCode);
             if (job is null)
@@ -104,7 +111,8 @@ public static class ApiEndpoints
                 return Error(StatusCodes.Status409Conflict, "notReady", "The scan has not finished yet.");
             }
 
-            return Results.File(job.PdfBytes!, contentType: "application/pdf", fileDownloadName: "scan.pdf");
+            return Results.File(job.ContentBytes!, contentType: job.ContentType,
+                fileDownloadName: ScanFormats.FileNameForContentType(job.ContentType));
         });
 
         api.MapDelete("/scans/{jobId}", (string jobId) =>

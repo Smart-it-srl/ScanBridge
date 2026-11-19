@@ -70,12 +70,16 @@ Starts a scan job. Body is optional; every field falls back to the configured de
   "colorMode": "color",         // "color" | "grayscale" | "blackAndWhite"
   "pageSize": "letter",         // "letter" | "legal" | "a4"
   "excludeBlankPages": false,
-  "autoDeskew": false
+  "autoDeskew": false,
+  "format": "pdf"                // "pdf" (default) | "jpg"
 }
 ```
 
+With `"format": "jpg"` only the first scanned image is returned, as a JPEG; any further
+pages are discarded.
+
 Responses: `202 Accepted` with `{ "jobId": "…" }` (Location header points at the job),
-`409` `scannerBusy`, `422` `noScannerConfigured`.
+`400` `invalidFormat`, `409` `scannerBusy`, `422` `noScannerConfigured`.
 
 ### `GET /api/v1/scans/{jobId}`
 
@@ -90,7 +94,8 @@ Polls a job.
 
 ### `GET /api/v1/scans/{jobId}/document`
 
-Returns the finished scan as `application/pdf`. `409 notReady` while the job is still
+Returns the finished scan as `application/pdf`, or `image/jpeg` if the job was started
+with `"format": "jpg"`. `409 notReady` while the job is still
 running; `410` with the failure code if the job ended without a document; `404` for
 unknown ids.
 

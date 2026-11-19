@@ -160,7 +160,7 @@ public sealed class TrayApplicationContext : ApplicationContext
                 await Task.Delay(500);
             }
 
-            if (job.Status == ScanJobStatus.Completed && job.PdfBytes is { } pdfBytes)
+            if (job.Status == ScanJobStatus.Completed && job.ContentBytes is { } pdfBytes)
             {
                 var pdfPath = Path.Combine(Path.GetTempPath(), $"scanbridge-test-{job.Id}.pdf");
                 await File.WriteAllBytesAsync(pdfPath, pdfBytes);

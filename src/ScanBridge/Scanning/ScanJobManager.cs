@@ -87,8 +87,9 @@ public sealed class ScanJobManager : IDisposable
         try
         {
             job.Status = ScanJobStatus.Scanning;
-            var pdfBytes = await _executor(request, progress, job.Cts.Token).ConfigureAwait(false);
-            job.PdfBytes = pdfBytes;
+            var content = await _executor(request, progress, job.Cts.Token).ConfigureAwait(false);
+            job.ContentBytes = content;
+            job.ContentType = ScanFormats.ContentTypeFor(request.Format);
             job.Status = ScanJobStatus.Completed;
         }
         catch (OperationCanceledException)

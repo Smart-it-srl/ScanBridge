@@ -12,7 +12,7 @@ public sealed record ScannerInfo(string Id, string Name, string Driver);
 /// <summary>
 /// The only class that talks to NAPS2. Owns a long-lived <see cref="ScanningContext"/>
 /// (with the 32-bit worker set up so 32-bit TWAIN drivers work from this 64-bit process)
-/// and turns a <see cref="ScanRequest"/> into PDF bytes.
+/// and turns a <see cref="ScanRequest"/> into PDF or JPEG bytes.
 /// </summary>
 public sealed class ScannerService : IDisposable
 {
@@ -65,7 +65,7 @@ public sealed class ScannerService : IDisposable
         }
     }
 
-    public async Task<byte[]> ScanToPdfAsync(ScanRequest request, IProgress<int> pageProgress, CancellationToken cancellationToken)
+    public async Task<byte[]> ScanAsync(ScanRequest request, IProgress<int> pageProgress, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(request.DeviceId))
         {
@@ -107,6 +107,16 @@ public sealed class ScannerService : IDisposable
             }
 
             using var stream = new MemoryStream();
+            if (request.Format == ScanFormats.Jpg)
+            {
+                // Photos: only the first image is delivered, any others are discarded.
+                using var rendered = images[0].Render();
+                rendered.Save(stream, ImageFileFormat.Jpeg);
+                _logger.LogInformation("Scan finished: {Pages} page(s) scanned, first one returned as JPEG ({Bytes} bytes)",
+                    images.Count, stream.Length);
+                return stream.ToArray();
+            }
+
             var exporter = new PdfExporter(_scanningContext);
             await exporter.Export(stream, images, new PdfExportParams()).ConfigureAwait(false);
             _logger.LogInformation("Scan finished: {Pages} page(s), {Bytes} bytes of PDF", images.Count, stream.Length);
