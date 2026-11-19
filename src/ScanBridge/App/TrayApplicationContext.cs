@@ -95,6 +95,28 @@ public sealed class TrayApplicationContext : ApplicationContext
         _settingsForm.Show();
     }
 
+    private static async Task DeleteTempFileLaterAsync(string path)
+    {
+        // Retry: a viewer that keeps the file locked makes the first attempts fail.
+        for (var attempt = 0; attempt < 12; attempt++)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(10));
+            try
+            {
+                File.Delete(path);
+                return;
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+
+        Log.Warning("Could not delete temporary test scan {Path}", path);
+    }
+
     private async void RunTestScan()
     {
         if (_testScanRunning)
@@ -143,6 +165,10 @@ public sealed class TrayApplicationContext : ApplicationContext
                 var pdfPath = Path.Combine(Path.GetTempPath(), $"scanbridge-test-{job.Id}.pdf");
                 await File.WriteAllBytesAsync(pdfPath, pdfBytes);
                 Process.Start(new ProcessStartInfo(pdfPath) { UseShellExecute = true });
+
+                // The PDF may contain personal data: don't leave it in %TEMP%. The viewer
+                // needs a moment to open the file, so delete after a delay (best effort).
+                _ = DeleteTempFileLaterAsync(pdfPath);
             }
 
             // Failure balloons come from OnJobFinished, shared with browser-initiated jobs.

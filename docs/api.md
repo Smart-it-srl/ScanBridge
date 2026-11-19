@@ -7,6 +7,12 @@ Browsers must be subject to the CORS allowlist: the calling page's origin has to
 listed under *Allowed website origins* in ScanBridge settings. Same-machine tools
 (curl, desktop apps) are not subject to CORS.
 
+Every `POST` and `DELETE` request under `/api/v1` must carry the custom header
+`X-ScanBridge` (any value, e.g. `X-ScanBridge: 1`), otherwise the server answers `403`.
+A custom header forces browsers to run a CORS preflight, so a page that is not in the
+allowlist cannot start a scan. Requests whose `Host` header is not `127.0.0.1:<port>` or
+`localhost:<port>` are also rejected with `403` (DNS rebinding protection).
+
 Requests from browsers should pass `targetAddressSpace: 'loopback'` in the `fetch`
 options to satisfy Chrome's Local Network Access rules (Chrome 142+).
 
