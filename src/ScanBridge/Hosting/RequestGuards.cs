@@ -26,7 +26,7 @@ public static class RequestGuards
             if (!IsAllowedHost(context.Request.Headers.Host.ToString(), port))
             {
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                await context.Response.WriteAsync("Invalid Host header.");
+                await context.Response.WriteAsync("Intestazione Host non valida.");
                 return;
             }
 
@@ -40,7 +40,7 @@ public static class RequestGuards
             if (RequiresCustomHeader(context.Request) && !context.Request.Headers.ContainsKey(RequiredHeaderName))
             {
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                await context.Response.WriteAsync($"Missing {RequiredHeaderName} header.");
+                await context.Response.WriteAsync($"Manca l'intestazione {RequiredHeaderName}.");
                 return;
             }
 

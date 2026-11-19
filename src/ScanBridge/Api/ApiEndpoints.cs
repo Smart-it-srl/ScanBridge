@@ -44,21 +44,21 @@ public static class ApiEndpoints
             if (!ScanFormats.TryNormalize(body.Format ?? settingsStore.Current.Defaults.Format, out var format))
             {
                 return Error(StatusCodes.Status400BadRequest, "invalidFormat",
-                    "format must be \"pdf\" or \"jpg\".");
+                    "format deve essere \"pdf\" oppure \"jpg\".");
             }
 
             var jpegQuality = body.JpegQuality ?? settings.Defaults.JpegQuality;
             if (!ScanFormats.IsValidJpegQuality(jpegQuality))
             {
                 return Error(StatusCodes.Status400BadRequest, "invalidJpegQuality",
-                    "jpegQuality must be between 1 and 100.");
+                    "jpegQuality deve essere compreso tra 1 e 100.");
             }
 
             var deviceId = body.ScannerId ?? settings.ScannerDeviceId;
             if (string.IsNullOrEmpty(deviceId))
             {
                 return Error(StatusCodes.Status422UnprocessableEntity, ScanErrorCodes.NoScannerConfigured,
-                    "No scanner is configured. Open ScanBridge settings and select a scanner.");
+                    "Nessuno scanner configurato. Apri le impostazioni di ScanBridge e seleziona uno scanner.");
             }
 
             // A device id passed by the caller may not match the configured device; only
@@ -83,7 +83,7 @@ public static class ApiEndpoints
             if (job is null)
             {
                 return Error(StatusCodes.Status409Conflict, errorCode ?? ScanErrorCodes.ScannerBusy,
-                    "A scan is already in progress.");
+                    "Una scansione è già in corso.");
             }
 
             return Results.Accepted($"/api/v1/scans/{job.Id}", new StartScanResponse(job.Id));
@@ -94,7 +94,7 @@ public static class ApiEndpoints
             var job = jobManager.Get(jobId);
             if (job is null)
             {
-                return Error(StatusCodes.Status404NotFound, "notFound", "Unknown scan job.");
+                return Error(StatusCodes.Status404NotFound, "notFound", "Scansione sconosciuta.");
             }
 
             return Results.Ok(ToResponse(job));
@@ -105,7 +105,7 @@ public static class ApiEndpoints
             var job = jobManager.Get(jobId);
             if (job is null)
             {
-                return Error(StatusCodes.Status404NotFound, "notFound", "Unknown scan job.");
+                return Error(StatusCodes.Status404NotFound, "notFound", "Scansione sconosciuta.");
             }
 
             if (job.Status != ScanJobStatus.Completed)
@@ -113,10 +113,10 @@ public static class ApiEndpoints
                 if (job.IsTerminal)
                 {
                     return Error(StatusCodes.Status410Gone, job.ErrorCode ?? ScanErrorCodes.ScanFailed,
-                        job.ErrorMessage ?? "The scan did not complete.");
+                        job.ErrorMessage ?? "La scansione non è stata completata.");
                 }
 
-                return Error(StatusCodes.Status409Conflict, "notReady", "The scan has not finished yet.");
+                return Error(StatusCodes.Status409Conflict, "notReady", "La scansione non è ancora terminata.");
             }
 
             var content = job.ContentBytes!;

@@ -79,7 +79,7 @@ public sealed class WebHostRunner : IAsyncDisposable
             {
                 IsRunning = false;
                 LastError = ex is IOException
-                    ? $"Could not listen on port {settings.Port} — it may be in use by another program."
+                    ? $"Impossibile mettersi in ascolto sulla porta {settings.Port}: potrebbe essere usata da un altro programma."
                     : ex.Message;
                 _logger.Error(ex, "Failed to start the ScanBridge API on port {Port}", settings.Port);
             }

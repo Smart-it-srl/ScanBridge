@@ -96,7 +96,7 @@ public sealed class ScanJobManager : IDisposable
         {
             job.Status = ScanJobStatus.Canceled;
             job.ErrorCode = ScanErrorCodes.Canceled;
-            job.ErrorMessage = "The scan was canceled.";
+            job.ErrorMessage = "La scansione è stata annullata.";
         }
         catch (ScanBridgeException ex)
         {

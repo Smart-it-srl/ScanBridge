@@ -34,11 +34,11 @@ public sealed class TrayApplicationContext : ApplicationContext
         _syncContext = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add("Settings…", null, (_, _) => ShowSettings());
-        menu.Items.Add("Scan test page", null, (_, _) => RunTestScan());
-        menu.Items.Add("Open log folder", null, (_, _) => LogFolder.Open());
+        menu.Items.Add("Impostazioni…", null, (_, _) => ShowSettings());
+        menu.Items.Add("Scansione di prova", null, (_, _) => RunTestScan());
+        menu.Items.Add("Apri cartella dei log", null, (_, _) => LogFolder.Open());
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Exit", null, (_, _) => ExitApplication());
+        menu.Items.Add("Esci", null, (_, _) => ExitApplication());
 
         _notifyIcon = new NotifyIcon
         {
@@ -127,7 +127,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         var settings = _settingsStore.Current;
         if (string.IsNullOrEmpty(settings.ScannerDeviceId))
         {
-            ShowBalloon("ScanBridge", "No scanner is configured yet — open Settings first.", ToolTipIcon.Warning);
+            ShowBalloon("ScanBridge", "Nessuno scanner configurato: apri prima le Impostazioni.", ToolTipIcon.Warning);
             ShowSettings();
             return;
         }
@@ -149,14 +149,14 @@ public sealed class TrayApplicationContext : ApplicationContext
         var job = _jobManager.TryStart(request, out var errorCode);
         if (job is null)
         {
-            ShowBalloon("ScanBridge", "A scan is already in progress.", ToolTipIcon.Warning);
+            ShowBalloon("ScanBridge", "Una scansione è già in corso.", ToolTipIcon.Warning);
             return;
         }
 
         _testScanRunning = true;
         try
         {
-            ShowBalloon("ScanBridge", "Scanning a test page…", ToolTipIcon.Info);
+            ShowBalloon("ScanBridge", "Scansione di prova in corso…", ToolTipIcon.Info);
             while (!job.IsTerminal)
             {
                 await Task.Delay(500);
@@ -179,7 +179,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         catch (Exception ex)
         {
             Log.Error(ex, "Test scan failed");
-            ShowBalloon("ScanBridge", $"Test scan failed: {ex.Message}", ToolTipIcon.Error);
+            ShowBalloon("ScanBridge", $"Scansione di prova non riuscita: {ex.Message}", ToolTipIcon.Error);
         }
         finally
         {
@@ -192,7 +192,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     {
         if (job.Status == ScanJobStatus.Failed)
         {
-            ShowBalloon("ScanBridge — scan failed", job.ErrorMessage ?? "The scan failed.", ToolTipIcon.Error);
+            ShowBalloon("ScanBridge — scansione non riuscita", job.ErrorMessage ?? "La scansione non è riuscita.", ToolTipIcon.Error);
         }
     }
 

@@ -70,7 +70,7 @@ public sealed class ScannerService : IDisposable
         if (string.IsNullOrEmpty(request.DeviceId))
         {
             throw new ScanBridgeException(ScanErrorCodes.NoScannerConfigured,
-                "No scanner is configured. Pick one in ScanBridge settings or pass scannerId.");
+                "Nessuno scanner configurato. Selezionane uno nelle impostazioni di ScanBridge oppure indica scannerId.");
         }
 
         var driver = ParseDriver(request.Driver);
@@ -103,7 +103,7 @@ public sealed class ScannerService : IDisposable
             if (images.Count == 0)
             {
                 throw new ScanBridgeException(ScanErrorCodes.NoPages,
-                    "No pages were scanned. Check that the document is loaded in the scanner.");
+                    "Nessuna pagina scansionata. Controlla che il documento sia inserito nello scanner.");
             }
 
             using var stream = new MemoryStream();
@@ -124,11 +124,13 @@ public sealed class ScannerService : IDisposable
         }
         catch (DeviceOfflineException ex)
         {
-            throw new ScanBridgeException(ScanErrorCodes.DeviceOffline, ex.Message, ex);
+            throw new ScanBridgeException(ScanErrorCodes.DeviceOffline,
+                "Lo scanner non risponde. Controlla che sia acceso e collegato al computer.", ex);
         }
         catch (DeviceException ex)
         {
-            throw new ScanBridgeException(ScanErrorCodes.ScanFailed, ex.Message, ex);
+            throw new ScanBridgeException(ScanErrorCodes.ScanFailed,
+                $"La scansione non è riuscita: {ex.Message}", ex);
         }
         finally
         {
