@@ -1,3 +1,5 @@
+using ScanBridge.Scanning;
+
 namespace ScanBridge.Settings;
 
 /// <summary>
@@ -98,6 +100,9 @@ public sealed class ScanDefaults
     /// (jpg returns only the first scanned image).
     /// </summary>
     public string Format { get; set; } = "pdf";
+
+    /// <summary>JPEG quality, 1-100, used when the output format is jpg.</summary>
+    public int JpegQuality { get; set; } = ScanFormats.DefaultJpegQuality;
 
     public ScanDefaults Clone() => (ScanDefaults)MemberwiseClone();
 }

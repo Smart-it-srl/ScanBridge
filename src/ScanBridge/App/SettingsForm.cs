@@ -45,6 +45,7 @@ public sealed class SettingsForm : Form
     private readonly ComboBox _pageSizeCombo = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 100 };
     private readonly CheckBox _blankPagesCheck = new() { Text = "Remove blank pages", AutoSize = true };
     private readonly CheckBox _deskewCheck = new() { Text = "Straighten (deskew) pages", AutoSize = true };
+    private readonly NumericUpDown _jpegQualityInput = new() { Minimum = 1, Maximum = 100, Width = 80 };
     private readonly ComboBox _formatCombo = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
 
     private readonly NumericUpDown _portInput = new() { Minimum = 1024, Maximum = 65535, Width = 100 };
@@ -141,6 +142,8 @@ public sealed class SettingsForm : Form
         };
         defaultsLayout.Controls.Add(formatHelp, 1, 5);
         defaultsLayout.SetColumnSpan(formatHelp, 3);
+        defaultsLayout.Controls.Add(new Label { Text = "JPG quality (1-100):", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 6);
+        defaultsLayout.Controls.Add(_jpegQualityInput, 1, 6);
         defaultsLayout.SetColumnSpan(_blankPagesCheck, 3);
         defaultsLayout.SetColumnSpan(_deskewCheck, 3);
         defaultsGroup.Controls.Add(defaultsLayout);
@@ -223,6 +226,7 @@ public sealed class SettingsForm : Form
         _deskewCheck.Checked = settings.Defaults.AutoDeskew;
         _formatCombo.Items.AddRange([.. FormatLabels]);
         _formatCombo.SelectedIndex = Math.Max(0, Array.IndexOf(FormatValues, settings.Defaults.Format));
+        _jpegQualityInput.Value = Math.Clamp(settings.Defaults.JpegQuality, 1, 100);
 
         _portInput.Value = Math.Clamp(settings.Port, (int)_portInput.Minimum, (int)_portInput.Maximum);
         foreach (var origin in settings.AllowedOrigins)
@@ -311,6 +315,7 @@ public sealed class SettingsForm : Form
         settings.Defaults.ExcludeBlankPages = _blankPagesCheck.Checked;
         settings.Defaults.AutoDeskew = _deskewCheck.Checked;
         settings.Defaults.Format = FormatValues[Math.Max(0, _formatCombo.SelectedIndex)];
+        settings.Defaults.JpegQuality = (int)_jpegQualityInput.Value;
 
         settings.Port = (int)_portInput.Value;
         settings.AllowedOrigins = _originsList.Items.Cast<string>().ToList();

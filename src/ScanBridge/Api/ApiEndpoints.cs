@@ -47,6 +47,13 @@ public static class ApiEndpoints
                     "format must be \"pdf\" or \"jpg\".");
             }
 
+            var jpegQuality = body.JpegQuality ?? settings.Defaults.JpegQuality;
+            if (!ScanFormats.IsValidJpegQuality(jpegQuality))
+            {
+                return Error(StatusCodes.Status400BadRequest, "invalidJpegQuality",
+                    "jpegQuality must be between 1 and 100.");
+            }
+
             var deviceId = body.ScannerId ?? settings.ScannerDeviceId;
             if (string.IsNullOrEmpty(deviceId))
             {
@@ -69,7 +76,8 @@ public static class ApiEndpoints
                 PageSize: body.PageSize ?? defaults.PageSize,
                 ExcludeBlankPages: body.ExcludeBlankPages ?? defaults.ExcludeBlankPages,
                 AutoDeskew: body.AutoDeskew ?? defaults.AutoDeskew,
-                Format: format);
+                Format: format,
+                JpegQuality: jpegQuality);
 
             var job = jobManager.TryStart(request, out var errorCode);
             if (job is null)
@@ -92,7 +100,7 @@ public static class ApiEndpoints
             return Results.Ok(ToResponse(job));
         });
 
-        api.MapGet("/scans/{jobId}/document", (string jobId) =>
+        api.MapGet("/scans/{jobId}/document", (string jobId, bool deleteAfterDownload = false) =>
         {
             var job = jobManager.Get(jobId);
             if (job is null)
@@ -111,7 +119,14 @@ public static class ApiEndpoints
                 return Error(StatusCodes.Status409Conflict, "notReady", "The scan has not finished yet.");
             }
 
-            return Results.File(job.ContentBytes!, contentType: job.ContentType,
+            var content = job.ContentBytes!;
+            if (deleteAfterDownload)
+            {
+                // The response keeps its own reference to the bytes; this frees the job right away.
+                jobManager.CancelOrDiscard(jobId);
+            }
+
+            return Results.File(content, contentType: job.ContentType,
                 fileDownloadName: ScanFormats.FileNameForContentType(job.ContentType));
         });
 

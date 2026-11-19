@@ -111,7 +111,7 @@ public sealed class ScannerService : IDisposable
             {
                 // Photos: only the first image is delivered, any others are discarded.
                 using var rendered = images[0].Render();
-                rendered.Save(stream, ImageFileFormat.Jpeg);
+                rendered.Save(stream, ImageFileFormat.Jpeg, new ImageSaveOptions { Quality = request.JpegQuality });
                 _logger.LogInformation("Scan finished: {Pages} page(s) scanned, first one returned as JPEG ({Bytes} bytes)",
                     images.Count, stream.Length);
                 return stream.ToArray();

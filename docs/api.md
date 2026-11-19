@@ -71,16 +71,17 @@ Starts a scan job. Body is optional; every field falls back to the configured de
   "pageSize": "letter",         // "letter" | "legal" | "a4"
   "excludeBlankPages": false,
   "autoDeskew": false,
-  "format": "pdf"                // "pdf" (default) | "jpg"
+  "format": "pdf",               // "pdf" (default) | "jpg"
+  "jpegQuality": 85              // 1-100, only used with "jpg"
 }
 ```
 
 If `format` is omitted, the default chosen in the ScanBridge settings window
 (*Output format*, PDF unless changed) is used. With `"format": "jpg"` only the first scanned image is returned, as a JPEG; any further
-pages are discarded.
+pages are discarded. `jpegQuality` defaults to the value in the settings window (85).
 
 Responses: `202 Accepted` with `{ "jobId": "…" }` (Location header points at the job),
-`400` `invalidFormat`, `409` `scannerBusy`, `422` `noScannerConfigured`.
+`400` `invalidFormat` / `invalidJpegQuality`, `409` `scannerBusy`, `422` `noScannerConfigured`.
 
 ### `GET /api/v1/scans/{jobId}`
 
@@ -98,7 +99,8 @@ Polls a job.
 Returns the finished scan as `application/pdf`, or `image/jpeg` if the job was started
 with `"format": "jpg"`. `409 notReady` while the job is still
 running; `410` with the failure code if the job ended without a document; `404` for
-unknown ids.
+unknown ids. Add `?deleteAfterDownload=true` to discard the job from memory as soon as
+the document has been sent (a second download then returns `404`).
 
 ### `DELETE /api/v1/scans/{jobId}`
 

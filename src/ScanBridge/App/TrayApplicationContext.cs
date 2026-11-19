@@ -143,7 +143,8 @@ public sealed class TrayApplicationContext : ApplicationContext
             PageSize: defaults.PageSize,
             ExcludeBlankPages: defaults.ExcludeBlankPages,
             AutoDeskew: defaults.AutoDeskew,
-            Format: ScanFormats.TryNormalize(defaults.Format, out var format) ? format : ScanFormats.Pdf);
+            Format: ScanFormats.TryNormalize(defaults.Format, out var format) ? format : ScanFormats.Pdf,
+            JpegQuality: ScanFormats.IsValidJpegQuality(defaults.JpegQuality) ? defaults.JpegQuality : ScanFormats.DefaultJpegQuality);
 
         var job = _jobManager.TryStart(request, out var errorCode);
         if (job is null)

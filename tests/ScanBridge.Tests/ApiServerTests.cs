@@ -29,6 +29,7 @@ public sealed class ApiServerTests : IAsyncLifetime
     private SettingsStore _settingsStore = null!;
     private ScannerService _scannerService = null!;
     private ScanJobManager _jobManager = null!;
+    private ScanRequest? _lastRequest;
     private WebHostRunner _runner = null!;
 
     private string BaseUrl => $"http://127.0.0.1:{_port}/api/v1";
@@ -49,7 +50,10 @@ public sealed class ApiServerTests : IAsyncLifetime
 
         _scannerService = new ScannerService(NullLogger.Instance);
         _jobManager = new ScanJobManager((request, _, _) =>
-            Task.FromResult(request.Format == ScanFormats.Jpg ? FakeJpeg : FakePdf));
+        {
+            _lastRequest = request;
+            return Task.FromResult(request.Format == ScanFormats.Jpg ? FakeJpeg : FakePdf);
+        });
         _runner = new WebHostRunner(_settingsStore, _scannerService, _jobManager, new LoggerConfiguration().CreateLogger());
 
         await _runner.StartAsync();
@@ -312,5 +316,65 @@ public sealed class ApiServerTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("invalidFormat", await response.Content.ReadAsStringAsync());
+    }
+
+    // ---- JPEG quality ----
+
+    [Fact]
+    public async Task JpegQualityDefaultsToTheSettingsValue()
+    {
+        var settings = _settingsStore.Current.Clone();
+        settings.Defaults.JpegQuality = 60;
+        _settingsStore.Save(settings);
+
+        await WaitUntilCompletedAsync(await StartScanAsync("""{"format":"jpg"}"""));
+
+        Assert.Equal(60, _lastRequest!.JpegQuality);
+    }
+
+    [Fact]
+    public async Task RequestJpegQualityOverridesTheSettings()
+    {
+        await WaitUntilCompletedAsync(await StartScanAsync("""{"format":"jpg","jpegQuality":40}"""));
+
+        Assert.Equal(40, _lastRequest!.JpegQuality);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(101)]
+    [InlineData(-5)]
+    public async Task OutOfRangeJpegQualityIsRejected(int quality)
+    {
+        var response = await _http.SendAsync(Request(HttpMethod.Post, "/scans", $$"""{"format":"jpg","jpegQuality":{{quality}}}"""));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("invalidJpegQuality", await response.Content.ReadAsStringAsync());
+    }
+
+    // ---- Discard after download ----
+
+    [Fact]
+    public async Task DocumentCanBeDownloadedTwiceByDefault()
+    {
+        var jobId = await StartScanAsync("{}");
+        await WaitUntilCompletedAsync(jobId);
+
+        Assert.Equal(HttpStatusCode.OK, (await _http.GetAsync($"{BaseUrl}/scans/{jobId}/document")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await _http.GetAsync($"{BaseUrl}/scans/{jobId}/document")).StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteAfterDownloadDiscardsTheJob()
+    {
+        var jobId = await StartScanAsync("""{"format":"jpg"}""");
+        await WaitUntilCompletedAsync(jobId);
+
+        var first = await _http.GetAsync($"{BaseUrl}/scans/{jobId}/document?deleteAfterDownload=true");
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(FakeJpeg, await first.Content.ReadAsByteArrayAsync());
+
+        var second = await _http.GetAsync($"{BaseUrl}/scans/{jobId}/document");
+        Assert.Equal(HttpStatusCode.NotFound, second.StatusCode);
     }
 }

@@ -47,13 +47,17 @@ public sealed record ScanRequest(
     string PageSize,
     bool ExcludeBlankPages,
     bool AutoDeskew,
-    string Format = ScanFormats.Pdf);
+    string Format = ScanFormats.Pdf,
+    int JpegQuality = ScanFormats.DefaultJpegQuality);
 
 /// <summary>Output formats a scan can be delivered in.</summary>
 public static class ScanFormats
 {
     public const string Pdf = "pdf";
     public const string Jpg = "jpg";
+    public const int DefaultJpegQuality = 85;
+
+    public static bool IsValidJpegQuality(int quality) => quality is >= 1 and <= 100;
 
     public static bool TryNormalize(string? value, out string format)
     {
