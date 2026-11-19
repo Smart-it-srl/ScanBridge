@@ -20,8 +20,7 @@ internal static class Program
             return;
         }
 
-        var logDirectory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScanBridge", "logs");
+        var logDirectory = ScanBridge.App.LogFolder.Path;
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .WriteTo.File(

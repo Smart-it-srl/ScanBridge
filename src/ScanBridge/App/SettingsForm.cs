@@ -50,7 +50,7 @@ public sealed class SettingsForm : Form
 
     private readonly NumericUpDown _portInput = new() { Minimum = 1024, Maximum = 65535, Width = 100 };
     private readonly ListBox _originsList = new() { Width = 420, Height = 90 };
-    private readonly TextBox _originInput = new() { Width = 300, PlaceholderText = "https://apps.example.gov" };
+    private readonly TextBox _originInput = new() { Width = 280, PlaceholderText = "https://apps.example.gov" };
     private readonly Button _addOriginButton = new() { Text = "Add", AutoSize = true };
     private readonly Button _removeOriginButton = new() { Text = "Remove selected", AutoSize = true };
     private readonly Label _listenerStatusLabel = new() { AutoSize = true, ForeColor = SystemColors.GrayText, Text = string.Empty };
@@ -173,6 +173,9 @@ public sealed class SettingsForm : Form
 
         var startupPanel = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Top, Padding = new Padding(4) };
         startupPanel.Controls.Add(_runAtLoginCheck);
+        var openLogsButton = new Button { Text = "Open log folder", AutoSize = true };
+        openLogsButton.Click += (_, _) => LogFolder.Open();
+        startupPanel.Controls.Add(openLogsButton);
 
         var saveButton = new Button { Text = "Save", AutoSize = true, DialogResult = DialogResult.OK };
         var cancelButton = new Button { Text = "Cancel", AutoSize = true, DialogResult = DialogResult.Cancel };
@@ -199,7 +202,7 @@ public sealed class SettingsForm : Form
 
         AutoSize = true;
         AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        MinimumSize = new Size(500, 0);
+        MinimumSize = new Size(700, 0);
     }
 
     private void LoadFromSettings(AppSettings settings)

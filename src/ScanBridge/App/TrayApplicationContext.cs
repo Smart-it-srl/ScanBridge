@@ -36,7 +36,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         var menu = new ContextMenuStrip();
         menu.Items.Add("Settings…", null, (_, _) => ShowSettings());
         menu.Items.Add("Scan test page", null, (_, _) => RunTestScan());
-        menu.Items.Add("Open log folder", null, (_, _) => OpenLogFolder());
+        menu.Items.Add("Open log folder", null, (_, _) => LogFolder.Open());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitApplication());
 
@@ -186,14 +186,6 @@ public sealed class TrayApplicationContext : ApplicationContext
             _testScanRunning = false;
             _jobManager.CancelOrDiscard(job.Id);
         }
-    }
-
-    private void OpenLogFolder()
-    {
-        var logDirectory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScanBridge", "logs");
-        Directory.CreateDirectory(logDirectory);
-        Process.Start(new ProcessStartInfo(logDirectory) { UseShellExecute = true });
     }
 
     private void OnJobFinished(ScanJob job)
