@@ -75,7 +75,8 @@ Starts a scan job. Body is optional; every field falls back to the configured de
 }
 ```
 
-With `"format": "jpg"` only the first scanned image is returned, as a JPEG; any further
+If `format` is omitted, the default chosen in the ScanBridge settings window
+(*Output format*, PDF unless changed) is used. With `"format": "jpg"` only the first scanned image is returned, as a JPEG; any further
 pages are discarded.
 
 Responses: `202 Accepted` with `{ "jobId": "…" }` (Location header points at the job),

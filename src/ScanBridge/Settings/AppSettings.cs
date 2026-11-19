@@ -93,5 +93,11 @@ public sealed class ScanDefaults
 
     public bool AutoDeskew { get; set; }
 
+    /// <summary>
+    /// Output format used when a request does not specify one: "pdf" or "jpg"
+    /// (jpg returns only the first scanned image).
+    /// </summary>
+    public string Format { get; set; } = "pdf";
+
     public ScanDefaults Clone() => (ScanDefaults)MemberwiseClone();
 }

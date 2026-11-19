@@ -41,7 +41,7 @@ public static class ApiEndpoints
             body ??= new StartScanRequest();
             var settings = settingsStore.Current;
 
-            if (!ScanFormats.TryNormalize(body.Format, out var format))
+            if (!ScanFormats.TryNormalize(body.Format ?? settingsStore.Current.Defaults.Format, out var format))
             {
                 return Error(StatusCodes.Status400BadRequest, "invalidFormat",
                     "format must be \"pdf\" or \"jpg\".");

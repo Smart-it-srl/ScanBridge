@@ -35,6 +35,7 @@ public class SettingsStoreTests : IDisposable
         };
         settings.Defaults.Dpi = 200;
         settings.Defaults.PaperSource = "duplex";
+        settings.Defaults.Format = "jpg";
         store.Save(settings);
 
         var reloaded = new SettingsStore(_tempDir).Load();
@@ -45,6 +46,7 @@ public class SettingsStoreTests : IDisposable
         Assert.Equal("Test Scanner", reloaded.ScannerDeviceName);
         Assert.Equal(200, reloaded.Defaults.Dpi);
         Assert.Equal("duplex", reloaded.Defaults.PaperSource);
+        Assert.Equal("jpg", reloaded.Defaults.Format);
         Assert.False(reloaded.RunAtLogin);
     }
 

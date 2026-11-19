@@ -25,6 +25,8 @@ public sealed class SettingsForm : Form
     private static readonly string[] ColorValues = ["color", "grayscale", "blackAndWhite"];
     private static readonly string[] PageSizeLabels = ["Letter", "Legal", "A4"];
     private static readonly string[] PageSizeValues = ["letter", "legal", "a4"];
+    private static readonly string[] FormatLabels = ["PDF (all pages)", "JPG (first image only)"];
+    private static readonly string[] FormatValues = ["pdf", "jpg"];
     private static readonly int[] DpiChoices = [100, 150, 200, 300, 400, 600];
 
     private readonly SettingsStore _settingsStore;
@@ -43,6 +45,7 @@ public sealed class SettingsForm : Form
     private readonly ComboBox _pageSizeCombo = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 100 };
     private readonly CheckBox _blankPagesCheck = new() { Text = "Remove blank pages", AutoSize = true };
     private readonly CheckBox _deskewCheck = new() { Text = "Straighten (deskew) pages", AutoSize = true };
+    private readonly ComboBox _formatCombo = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
 
     private readonly NumericUpDown _portInput = new() { Minimum = 1024, Maximum = 65535, Width = 100 };
     private readonly ListBox _originsList = new() { Width = 420, Height = 90 };
@@ -60,7 +63,8 @@ public sealed class SettingsForm : Form
         _webHostRunner = webHostRunner;
         _syncContext = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
 
-        Text = "ScanBridge Settings";
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+        Text = $"ScanBridge v{version} Settings";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -123,6 +127,20 @@ public sealed class SettingsForm : Form
         defaultsLayout.Controls.Add(_pageSizeCombo, 3, 1);
         defaultsLayout.Controls.Add(_blankPagesCheck, 1, 2);
         defaultsLayout.Controls.Add(_deskewCheck, 1, 3);
+        defaultsLayout.Controls.Add(new Label { Text = "Output format:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 4);
+        defaultsLayout.Controls.Add(_formatCombo, 1, 4);
+        defaultsLayout.SetColumnSpan(_formatCombo, 3);
+        var formatHelp = new Label
+        {
+            Text = "Used when the website does not ask for a format. JPG returns only the first scanned " +
+                   "image (for photos and single-sided documents); PDF returns every page. A request can " +
+                   "override this with \"format\": \"pdf\" or \"jpg\".",
+            AutoSize = true,
+            MaximumSize = new Size(460, 0),
+            ForeColor = SystemColors.GrayText,
+        };
+        defaultsLayout.Controls.Add(formatHelp, 1, 5);
+        defaultsLayout.SetColumnSpan(formatHelp, 3);
         defaultsLayout.SetColumnSpan(_blankPagesCheck, 3);
         defaultsLayout.SetColumnSpan(_deskewCheck, 3);
         defaultsGroup.Controls.Add(defaultsLayout);
@@ -203,6 +221,8 @@ public sealed class SettingsForm : Form
         _pageSizeCombo.SelectedIndex = Math.Max(0, Array.IndexOf(PageSizeValues, settings.Defaults.PageSize));
         _blankPagesCheck.Checked = settings.Defaults.ExcludeBlankPages;
         _deskewCheck.Checked = settings.Defaults.AutoDeskew;
+        _formatCombo.Items.AddRange([.. FormatLabels]);
+        _formatCombo.SelectedIndex = Math.Max(0, Array.IndexOf(FormatValues, settings.Defaults.Format));
 
         _portInput.Value = Math.Clamp(settings.Port, (int)_portInput.Minimum, (int)_portInput.Maximum);
         foreach (var origin in settings.AllowedOrigins)
@@ -290,6 +310,7 @@ public sealed class SettingsForm : Form
         settings.Defaults.PageSize = PageSizeValues[Math.Max(0, _pageSizeCombo.SelectedIndex)];
         settings.Defaults.ExcludeBlankPages = _blankPagesCheck.Checked;
         settings.Defaults.AutoDeskew = _deskewCheck.Checked;
+        settings.Defaults.Format = FormatValues[Math.Max(0, _formatCombo.SelectedIndex)];
 
         settings.Port = (int)_portInput.Value;
         settings.AllowedOrigins = _originsList.Items.Cast<string>().ToList();

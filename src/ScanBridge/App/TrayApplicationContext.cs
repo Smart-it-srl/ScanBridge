@@ -142,7 +142,8 @@ public sealed class TrayApplicationContext : ApplicationContext
             ColorMode: defaults.ColorMode,
             PageSize: defaults.PageSize,
             ExcludeBlankPages: defaults.ExcludeBlankPages,
-            AutoDeskew: defaults.AutoDeskew);
+            AutoDeskew: defaults.AutoDeskew,
+            Format: ScanFormats.TryNormalize(defaults.Format, out var format) ? format : ScanFormats.Pdf);
 
         var job = _jobManager.TryStart(request, out var errorCode);
         if (job is null)
@@ -162,7 +163,8 @@ public sealed class TrayApplicationContext : ApplicationContext
 
             if (job.Status == ScanJobStatus.Completed && job.ContentBytes is { } pdfBytes)
             {
-                var pdfPath = Path.Combine(Path.GetTempPath(), $"scanbridge-test-{job.Id}.pdf");
+                var extension = Path.GetExtension(ScanFormats.FileNameForContentType(job.ContentType));
+                var pdfPath = Path.Combine(Path.GetTempPath(), $"scanbridge-test-{job.Id}{extension}");
                 await File.WriteAllBytesAsync(pdfPath, pdfBytes);
                 Process.Start(new ProcessStartInfo(pdfPath) { UseShellExecute = true });
 
